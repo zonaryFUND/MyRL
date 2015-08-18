@@ -4,3 +4,4 @@ Assets/UnityVS.meta
 Assets/UnityVS/
 *.csproj
 *.sln
+.vs/
