@@ -11,7 +11,7 @@ public class KeyboardListener : MonoBehaviour {
             Input.GetKey(KeyCode.LeftArrow) ||
             Input.GetKey(KeyCode.RightArrow))
         {
-            TerrainMover.Instance.Move((Input.GetKey(KeyCode.LeftArrow) ? 1 : 0) + (Input.GetKey(KeyCode.RightArrow) ? -1 : 0),
+            PlayerModel.Instance.Move((Input.GetKey(KeyCode.LeftArrow) ? 1 : 0) + (Input.GetKey(KeyCode.RightArrow) ? -1 : 0),
             (Input.GetKey(KeyCode.DownArrow) ? 1 : 0) + (Input.GetKey(KeyCode.UpArrow) ? -1 : 0));
         }
 
