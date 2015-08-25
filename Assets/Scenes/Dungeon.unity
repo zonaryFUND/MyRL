@@ -449,7 +449,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f0ab3131bcfc9b46b13ba614cfcb4ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TileUnitSize: {x: 100, y: 100}
+  TileUnitSize: 100
   horizontalTilesPrefab: {fileID: 156604, guid: 17f993f777b9f1446ada27ef6ab1aaab,
     type: 2}
 --- !u!1 &2034208169
@@ -520,6 +520,7 @@ Camera:
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
+  m_TargetEye: 3
   m_HDR: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -687,5 +688,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 378ff98bc6b103740bab8f6ebea5c48f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  x: 0
-  y: 0
+  x: 17
+  y: 13

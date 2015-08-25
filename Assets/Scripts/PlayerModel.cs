@@ -18,10 +18,10 @@ public class PlayerModel : MonoBehaviour {
     {
         if (onMoving) return;
 
+        onMoving = true;
+        TerrainGraphicController.Instance.Move(horizontal, vertical, x, y, OnMoveTweenFinished);
         x += horizontal;
         y += vertical;
-        onMoving = true;
-        TerrainGraphicController.Instance.Move(horizontal, vertical, OnMoveTweenFinished);
     }
 
     void OnMoveTweenFinished()

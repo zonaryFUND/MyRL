@@ -12,7 +12,7 @@ public class SimpleTerrain : ITerrainGenerator {
             var vertical = new List<TileBase>();
             for (int j = 0; j < Width; j++)
             {
-                if (i * (i - Height - 1) * j * (j - Width - 1) == 0)
+                if (i * (i - Height + 1) * j * (j - Width + 1) == 0)
                 {
                     vertical.Add(new TileHardWall());
                 }

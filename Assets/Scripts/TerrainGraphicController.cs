@@ -12,8 +12,8 @@ public class TerrainGraphicController : MonoBehaviour {
     }
     #endregion MonoBehaviourSingleton
 
-    public static int VisibleWidth { get; private set; }
-    public static int VisibleHeight { get; private set; }
+    public int VisibleWidth { get; private set; }
+    public int VisibleHeight { get; private set; }
 
     [SerializeField]
     float TileUnitSize = 100f;
@@ -27,77 +27,71 @@ public class TerrainGraphicController : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        Vector2 rootRectSize = CanvasRoot.Root.GetComponent<RectTransform>().rect.size;
-        VisibleWidth = Mathf.FloorToInt(rootRectSize.x / TileUnitSize) + 3;
-        VisibleHeight = Mathf.FloorToInt(rootRectSize.y / TileUnitSize) + 3;
+        Vector2 rootRectSize = transform.parent.GetComponent<RectTransform>().rect.size;
+        VisibleWidth = Mathf.FloorToInt(rootRectSize.x / TileUnitSize) + 2;
+        VisibleWidth += 1 - VisibleWidth % 2;
+        VisibleHeight = Mathf.FloorToInt(rootRectSize.y / TileUnitSize) + 2;
+        VisibleHeight += 1 - VisibleHeight % 2;
 
         var generator = new SimpleTerrain();
         terrainWidth = generator.Width = 20;
         terrainHeight = generator.Height = 15;
         currentTerrain = generator.Generate();
 
-        Init(PlayerModel.Instance.x, PlayerModel.Instance.y);
+        CreateVoid();
+        Reset(PlayerModel.Instance.x, PlayerModel.Instance.y);
 	}
 
-    void Init(int centerX, int centerY)
+    void CreateVoid()
     {
-        for (int i = centerY - VisibleHeight / 2; i < centerY + VisibleHeight / 2 + 1; i++)
-        {
-            GameObject horizontalTiles = UIUtil.AddChild(gameObject, horizontalTilesPrefab);
-            if (i < 0 || i > terrainHeight - 1)
-            {
-                horizontalTiles.GetComponent<HorizontalTiles>().InitHardWall(VisibleWidth);
-            }
-            else
-            {
-                int leftOffset = VisibleWidth / 2 - centerX;
-                if (leftOffset > 0)
-                {
-                    horizontalTiles.GetComponent<HorizontalTiles>().Init(currentTerrain[i].Take(VisibleWidth - leftOffset), leftOffset);
-                    continue;
-                }
-
-                int rightOffset = VisibleWidth / 2 - (terrainWidth - centerX);
-                if (rightOffset > 0)
-                {
-                    horizontalTiles.GetComponent<HorizontalTiles>().Init(currentTerrain[i].Skip(VisibleWidth - rightOffset), -rightOffset);
-                    continue;
-                }
-
-                horizontalTiles.GetComponent<HorizontalTiles>().Init(currentTerrain[i].Skip(-leftOffset).Take(VisibleWidth), 0);
-            }
-        }
+        for (int i = 0; i < VisibleHeight; i++) 
+            gameObject.AddChild(horizontalTilesPrefab).GetComponent<HorizontalTiles>().CreateVoidTiles(VisibleWidth, 0);
     }
 
-    public void Move(int horizontalDelta, int verticalDelta, Action onTweenFinished)
+    void Reset(int centerX, int centerY)
+    {
+        var horizontals = GetComponentsInChildren<HorizontalTiles>();
+        foreach (var horizontal in horizontals) horizontal.ResetTiles(null, 0);
+
+        int leftOffset = Mathf.Max(0, VisibleWidth / 2 - centerX);
+        horizontals.SafeSkip(VisibleHeight / 2 - centerY)
+            .ZipForEach(currentTerrain.SafeSkip(centerY - VisibleHeight / 2), (horizontalTiles, horizontalTerrain) =>
+                horizontalTiles.ResetTiles(horizontalTerrain.SafeSkip(centerX - VisibleWidth / 2), leftOffset));
+    }
+
+    public void Move(int deltaX, int deltaY, int previousX, int previousY, Action onTweenFinished)
     {
         var moveTween =
             TweenAnchoredPosition.BeginDelta(gameObject,
-            (Vector2.up * verticalDelta + Vector2.right * horizontalDelta) * TileUnitSize, 0.2f);
+            (Vector2.up * deltaY + Vector2.left * deltaX) * TileUnitSize, 0.1f);
         moveTween.OnFinished = () =>
         {
             onTweenFinished();
-            HandleGraphicOnMoveFinished(horizontalDelta, verticalDelta);
+            HandleGraphicOnMoveFinished(deltaX, deltaY, previousX, previousY);
         };
         moveTween.destroyOnFinished = true;
     }
 
-    void HandleGraphicOnMoveFinished(int horizontalDelta, int verticalDelta)
+    void HandleGraphicOnMoveFinished(int deltaX, int deltaY, int previousX, int previousY)
     {
-        if (verticalDelta > 0)
-        {
-            var movedHorizontal = GetComponentsInChildren<HorizontalTiles>().Last();
-            movedHorizontal.transform.SetAsFirstSibling();
+        var horizontals = GetComponentsInChildren<HorizontalTiles>();
 
-            int newLineIndex = PlayerModel.Instance.y - VisibleHeight / 2;
-            if (newLineIndex < 0)
-            {
-                movedHorizontal.InitHardWall(VisibleWidth);
-            }
-            else
-            {
-                
-            }
+        if (deltaX != 0)
+        {
+            int newTileX = previousX + deltaX + VisibleWidth / 2 * deltaX;
+            horizontals.SafeSkip(VisibleHeight / 2 - previousY)
+                .ZipForEach(currentTerrain.SafeSkip(previousY - VisibleHeight / 2), (horizontalTiles, horizontalTerrain) =>
+                    horizontalTiles.MoveEdgeTile(deltaX > 0, horizontalTerrain.SafeIndexer(previousX + deltaX + VisibleWidth / 2 * deltaX)));
         }
+
+        if (deltaY != 0)
+        {
+            int leftOffset = Mathf.Max(0, VisibleWidth / 2 - (previousX + deltaX));
+            horizontals.TurnEdgeSibling(deltaY > 0)
+                .ResetTiles(currentTerrain.SafeIndexer(previousY + deltaY + VisibleHeight / 2 * deltaY).SafeSkip(previousX + deltaX - VisibleWidth / 2),
+                    leftOffset);
+        }
+
+        GetComponent<RectTransform>().anchoredPosition += (Vector2.down * deltaY + Vector2.right * deltaX) * TileUnitSize;
     }
 }

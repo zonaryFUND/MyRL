@@ -5,3 +5,5 @@ Assets/UnityVS/
 *.csproj
 *.sln
 .vs/
+*.suo
+obj/
